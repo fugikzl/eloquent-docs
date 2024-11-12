@@ -26,8 +26,22 @@ class EloquentDocsGeneratorCommand extends Command
         GeneratePhpDocService $generatePhpDocService,
         Filesystem $filesystem
     ): int {
-        $modelClass = $this->argument('model');
-        if (!class_exists($modelClass)) {
+        $modelInput = $this->argument('model');
+
+        $possibleModelClasses = [
+            $modelInput,
+            str_replace('\\', '\\\\', $modelInput),
+            'App\\Models\\' . $modelInput,
+        ];
+
+        foreach ($possibleModelClasses as $possibleModelClass) {
+            if (class_exists($possibleModelClass)) {
+                $modelClass = $possibleModelClass;
+                break;
+            }
+        }
+
+        if (!isset($modelClass)) {
             return $this->error("Class $modelClass doesn't exists.") || 1;
         }
 
@@ -97,5 +111,5 @@ class EloquentDocsGeneratorCommand extends Command
 
         $filesystem->put($filePath, $fileContent);
         $this->info('Wrote phpDoc scope to ' . $filePath);
-     }
+    }
 }
